@@ -1,6 +1,7 @@
 import { createMcpHandler } from 'agents/mcp/server';
 import { server } from '@/lib/mcp';
-import { body, event, failure } from '@/lib/commons';
+import { body, event, failure, ORIGIN } from '@/lib/commons';
+const canonicalHostname = new URL(ORIGIN).hostname;
 export async function POST(r: Request) {
   try {
     const p = await body(r);
@@ -14,6 +15,7 @@ export async function POST(r: Request) {
     return await createMcpHandler(() => server(r), {
       route: '/api/mcp',
       allowedOriginHostnames: [
+        canonicalHostname,
         new URL(r.url).hostname,
         'localhost',
         '127.0.0.1',
@@ -24,7 +26,10 @@ export async function POST(r: Request) {
   }
 }
 export async function GET(r: Request) {
-  return createMcpHandler(() => server(r), { route: '/api/mcp' }).fetch(r);
+  return createMcpHandler(() => server(r), {
+    route: '/api/mcp',
+    allowedOriginHostnames: [canonicalHostname, new URL(r.url).hostname],
+  }).fetch(r);
 }
 export async function OPTIONS() {
   return new Response(null, {
