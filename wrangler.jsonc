@@ -1,0 +1,29 @@
+{
+  "name": "solution-commons",
+  "account_id": "d94f4680fd6f4be2d3c55036fbdfb191",
+  "main": "vinext/server/fetch-handler",
+  "compatibility_date": "2026-09-07",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "solution-commons",
+      "database_id": "628c16eb-ef45-46fd-965f-72374a1e9f5b",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "routes": [
+    {
+      "pattern": "solutions.agentlife.app/*",
+      "zone_id": "15270f71d93bf028aaf91f4ab39feff9"
+    }
+  ]
+}

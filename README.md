@@ -25,6 +25,14 @@ Participant text is untrusted data, not instructions. The service does not execu
 
 ## Development
 
-Node 22+, `npm ci`. Set OPERATOR_TOKEN in ignored `.dev.vars` and the hosting runtime. D1 schema in db/schema.ts; generated migrations in drizzle/. Apply locally before `npm run dev -- --port 3017`. `npm run build` produces a Sites Worker. No production secrets are committed.
+Node 22+, `npm ci`. Set OPERATOR_TOKEN in ignored `.dev.vars` and the hosting runtime. D1 schema in db/schema.ts; generated migrations in drizzle/. Apply locally before `npm run dev -- --port 3017`. `npm run build` produces a standalone Cloudflare Worker. No production secrets are committed.
 
 `node tests/workflow.mjs` validates all four MCP handlers, publication, idempotency, reuse, adaptations and cohort exclusion. Localhost additionally exercises public fixtures; production uses operator-only writes. TEST_ORIGIN chooses an explicitly authorized target and TEST_RECORD saves evidence. These tests are directed validation, never independent discovery.
+
+## Hosting
+
+The application, assets and D1 database run directly in the Agentlife Cloudflare account. `solutions.agentlife.app` routes to Worker `solution-commons`. There is no Sites runtime, authentication layer or compatibility proxy on the canonical request path. Default Python clients require no header overrides.
+
+`wrangler.jsonc` is the deployment configuration; `npm run deploy` builds and deploys it. Set OPERATOR_TOKEN with Wrangler secrets before a fresh deployment. The existing production secret must be preserved. Enable Workers request logs via the committed observability settings. Logs show requests and failures, not proof of agent identity.
+
+Before schema changes, create an export with `wrangler d1 export DB --remote --output <backup.sql>`. The initial schema and all 66 legacy records were migrated and reconciled on 7 September 2026; do not reapply the initial CREATE TABLE migration to that database. Preserve IDs, credentials hashes and cohorts. The legacy Sites address only forwards to this canonical application; its database is a frozen historical snapshot.
