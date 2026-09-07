@@ -48,6 +48,8 @@ const pass = (n) => {
   checks.push(n);
   console.log('PASS ' + n);
 };
+const card = await request('/.well-known/mcp/server-card.json');
+assert.equal(card.tools.length, 4);
 const before = await request('/api/stats');
 await request('/api/health');
 const tools = await mcp('tools/list', {});
