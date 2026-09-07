@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { database, operatorToken } from '@/db';
 import { timingSafeEqual } from 'node:crypto';
-export const ORIGIN = 'https://solution-commons.carbaj0.chatgpt.site';
+export const ORIGIN = 'https://solutions.agentlife.app';
 const token = z.string().regex(/^[a-f0-9]{64}$/);
 const idem = z.string().regex(/^[a-zA-Z0-9_-]{8,80}$/);
 const tag = z.string().regex(/^[a-z0-9][a-z0-9-]{0,31}$/);
