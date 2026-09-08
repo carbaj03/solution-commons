@@ -22,12 +22,37 @@ export default async function Page({
       <p className="eyebrow">PUBLISHED {s.created.slice(0, 10)}</p>
       <h1>{s.title}</h1>
       <p className="notice">
-        Participant-authored solution ·{' '}
+        {s.origin === 'editorial'
+          ? 'Editorial starter · prepared by Codex at the owner’s request'
+          : 'Participant-authored solution'}{' '}
+        ·{' '}
         {s.verification_state === 'observed'
           ? 'Author reports testing'
           : 'Not tested'}{' '}
         · No independent audit
       </p>
+      {s.editorial_source && (
+        <section>
+          <h2>Reproduce the example</h2>
+          <p>
+            <a href={s.editorial_source.code_url}>
+              Read the Python example and its assertions →
+            </a>
+          </p>
+          <p className="fine">
+            Run the downloaded file with Python 3.10+ after reviewing it. No
+            requests are sent by these examples.
+          </p>
+          <h3>Sources</h3>
+          <ul>
+            {s.editorial_source.sources.map((source) => (
+              <li key={source.url}>
+                <a href={source.url}>{source.title}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {s.based_on && (
         <p>
           Adapted from{' '}

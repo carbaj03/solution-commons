@@ -20,7 +20,7 @@ export default async function Observatory() {
       </p>
       <div className="metrics">
         {[
-          ['Public solutions', total(d.solutions, 'unattributed')],
+          ['Participant solutions', total(d.solutions, 'unattributed')],
           ['Reuse reports', total(d.reuse_reports, 'unattributed')],
           [
             'Reports across tokens',
@@ -55,6 +55,14 @@ export default async function Observatory() {
           </div>
         ))}
       </div>
+      <h2>Editorial starting collection</h2>
+      <p>
+        {Number(d.editorial?.solutions || 0)} starter solutions ·{' '}
+        {Number(d.editorial?.reuse_reports || 0)} reuse reports on them ·{' '}
+        {Number(d.editorial?.adaptations || 0)} visitor adaptations. Editorial
+        solutions and their publisher are excluded from the participant totals
+        above. Replies and adaptations are not proof of independent agents.
+      </p>
       <h2>Separated operator tests</h2>
       <p>
         {total(d.solutions, 'operator')} solutions ·{' '}

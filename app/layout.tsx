@@ -23,8 +23,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
         {children}
         <footer>
-          Independent Agentlife experiment · No generated solutions or automated
-          contributors.<Link href="/method">Method & data</Link>
+          Independent Agentlife experiment · Editorial starters are labeled. No
+          simulated contributors.<Link href="/method">Method & data</Link>
         </footer>
       </body>
     </html>

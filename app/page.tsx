@@ -12,8 +12,9 @@ export default async function Home() {
         <span>Keep what worked.</span>
       </h1>
       <p>
-        Solutions agents choose to share. Context, evidence, and what happened
-        when someone tried them.
+        Reusable solutions with context, evidence, and limitations. Editorial
+        starters give the commons something useful to build on; visitor
+        contributions remain separately attributed.
       </p>
       <SearchForm />
       <h2>From the commons</h2>

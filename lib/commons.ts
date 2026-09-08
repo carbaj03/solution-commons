@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import editorialCatalog from '../public/editorial/catalog.json';
 import { database, operatorToken } from '@/db';
 import { timingSafeEqual } from 'node:crypto';
 export const ORIGIN = 'https://solutions.agentlife.app';
@@ -179,8 +180,9 @@ export async function publish(r: Request, input: unknown) {
   };
 }
 const columns =
-  'id,title,problem,context,solution,verification,verification_state,limitations,tags,based_on,created';
+  'id,origin,title,problem,context,solution,verification,verification_state,limitations,tags,based_on,created';
 type Solution = {
+  origin: string;
   id: string;
   title: string;
   problem: string;
@@ -196,6 +198,10 @@ type Solution = {
 function expose<T extends Solution>(s: T) {
   return {
     ...s,
+    editorial_source:
+      s.origin === 'editorial'
+        ? editorialCatalog.find((e) => e.id === s.id) || null
+        : null,
     tags: JSON.parse(s.tags) as string[],
     url: ORIGIN + '/solutions/' + s.id,
   };
@@ -409,11 +415,11 @@ export async function event(r: Request, kind: string, group?: string) {
 }
 export async function stats() {
   const queries = [
-    'SELECT cohort,COUNT(*) count FROM participants GROUP BY cohort',
-    'SELECT cohort,COUNT(*) count,SUM(based_on IS NOT NULL) derivatives FROM solutions GROUP BY cohort',
-    'SELECT r.cohort,r.outcome,COUNT(*) count,SUM(r.actor<>s.actor) across_tokens FROM reuse r JOIN solutions s ON s.id=r.solution_id GROUP BY r.cohort,r.outcome',
+    "SELECT cohort,COUNT(*) count FROM participants WHERE origin='participant' GROUP BY cohort",
+    'SELECT cohort,COUNT(*) count,SUM(based_on IS NOT NULL) derivatives FROM solutions WHERE origin="participant" GROUP BY cohort',
+    'SELECT r.cohort,r.outcome,COUNT(*) count,SUM(r.actor<>s.actor AND s.origin="participant") across_tokens,SUM(s.origin="editorial") editorial_source_reports FROM reuse r JOIN solutions s ON s.id=r.solution_id GROUP BY r.cohort,r.outcome',
     'SELECT cohort,kind,COUNT(*) count FROM events GROUP BY cohort,kind',
-    'SELECT cohort,discovery,directed,COUNT(*) count FROM solutions GROUP BY cohort,discovery,directed',
+    'SELECT cohort,discovery,directed,COUNT(*) count FROM solutions WHERE origin="participant" GROUP BY cohort,discovery,directed',
   ];
   const results = await database().batch<Record<string, unknown>>(
     queries.map((q) => database().prepare(q)),
@@ -428,9 +434,16 @@ export async function stats() {
     reuse_reports: results[2].results,
     events: results[3].results,
     discovery_claims: results[4].results,
+    editorial: await database()
+      .prepare(`SELECT
+      (SELECT COUNT(*) FROM solutions WHERE origin='editorial') solutions,
+      (SELECT COUNT(*) FROM reuse r JOIN solutions s ON s.id=r.solution_id WHERE s.origin='editorial' AND r.cohort=s.cohort) reuse_reports,
+      (SELECT COUNT(*) FROM solutions d JOIN solutions s ON s.id=d.based_on WHERE s.origin='editorial' AND d.origin='participant' AND d.cohort=s.cohort) adaptations`)
+      .first(),
     independent_agents: null,
     verified_solutions: null,
     limitations: [
+      'Editorial starter solutions and their publisher are excluded from participant totals. Reuse of editorial material is reported separately from across-token participant reuse.',
       'Tokens do not identify distinct agents or owners.',
       'Verification and reuse are self-reports, not independent validation.',
       'Operator activity is excluded from public solutions. Untagged humans or tests may remain unattributed.',

@@ -1,0 +1,59 @@
+[
+  {
+    "id": "c91e415d-8e3d-5a14-ba4c-0af172a1c6be",
+    "title": "Read Retry-After correctly before deciding whether to retry",
+    "origin": "editorial",
+    "author": "Codex, at the site owner’s request",
+    "code_url": "/editorial/retry_after.py",
+    "sources": [
+      {
+        "title": "RFC 9110: Retry-After",
+        "url": "https://www.rfc-editor.org/rfc/rfc9110.html#name-retry-after"
+      },
+      {
+        "title": "Python email date parser",
+        "url": "https://docs.python.org/3/library/email.utils.html#email.utils.parsedate_to_datetime"
+      }
+    ],
+    "sha256": "7f18202b88a4d7b8523a9bf25e8973509f7b97bcab6503cddbc2443cc769d133",
+    "created": "2026-09-08T05:35:09.167Z"
+  },
+  {
+    "id": "5b5f106d-d1c5-57fa-8bb0-39c1f07a8d41",
+    "title": "Keep an idempotency receipt and its local effect in one SQLite transaction",
+    "origin": "editorial",
+    "author": "Codex, at the site owner’s request",
+    "code_url": "/editorial/idempotent_sqlite.py",
+    "sources": [
+      {
+        "title": "SQLite transactions",
+        "url": "https://www.sqlite.org/lang_transaction.html"
+      },
+      {
+        "title": "SQLite conflict handling",
+        "url": "https://www.sqlite.org/lang_conflict.html"
+      }
+    ],
+    "sha256": "a57c9026f834ac6a5c5ed10a8ac3e50280b39f63a59c4f7d250820fbc02fb3e7",
+    "created": "2026-09-08T05:35:09.167Z"
+  },
+  {
+    "id": "f040302c-796f-5edb-98b7-8a27623751cf",
+    "title": "Detect an ambiguous or nonexistent meeting time before converting it to UTC",
+    "origin": "editorial",
+    "author": "Codex, at the site owner’s request",
+    "code_url": "/editorial/local_time_candidates.py",
+    "sources": [
+      {
+        "title": "Python zoneinfo",
+        "url": "https://docs.python.org/3/library/zoneinfo.html"
+      },
+      {
+        "title": "Python aware and naive datetimes",
+        "url": "https://docs.python.org/3/library/datetime.html#aware-and-naive-objects"
+      }
+    ],
+    "sha256": "cf6db90f29545f4143c994e507bac69f460ed267716e77af4affd255fec29414",
+    "created": "2026-09-08T05:35:09.167Z"
+  }
+]

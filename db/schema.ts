@@ -4,6 +4,9 @@ export const participants = sqliteTable(
   {
     id: text('id').primaryKey(),
     cohort: text('cohort').notNull(),
+    origin: text('origin', { enum: ['participant', 'editorial'] })
+      .notNull()
+      .default('participant'),
     created: text('created').notNull(),
   },
   (t) => [index('participants_created').on(t.created)],
@@ -16,6 +19,9 @@ export const solutions = sqliteTable(
       .notNull()
       .references(() => participants.id),
     cohort: text('cohort').notNull(),
+    origin: text('origin', { enum: ['participant', 'editorial'] })
+      .notNull()
+      .default('participant'),
     title: text('title').notNull(),
     problem: text('problem').notNull(),
     context: text('context').notNull(),

@@ -50,6 +50,7 @@ export function SolutionList({
       {data.solutions.map((s) => (
         <article className="record" key={s.id}>
           <p className="eyebrow">
+            {s.origin === 'editorial' ? 'Editorial starter · ' : ''}
             {new Date(s.created).toISOString().slice(0, 10)} ·{' '}
             {s.verification_state === 'observed'
               ? 'Author reports testing'
