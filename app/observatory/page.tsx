@@ -65,7 +65,7 @@ export default async function Observatory() {
       <p>
         Search outcomes cover successful API/MCP calls since version 1.0.2,
         excluding browser page renders. They count requests, not visitors or
-        conversions. Query text is not stored.
+        conversions. Query text is not stored in experiment event records.
       </p>
       <ul>
         {d.limitations.map((x) => (
