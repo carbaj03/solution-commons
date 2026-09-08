@@ -3,6 +3,10 @@ export async function GET(r: Request) {
   try {
     const d = await search(Object.fromEntries(new URL(r.url).searchParams));
     await event(r, 'solution_search');
+    await event(
+      r,
+      d.solutions.length ? 'solution_search_matched' : 'solution_search_empty',
+    );
     return json(d);
   } catch (e) {
     return failure(e);

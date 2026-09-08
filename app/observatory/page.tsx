@@ -26,6 +26,27 @@ export default async function Observatory() {
             'Reports across tokens',
             total(d.reuse_reports, 'unattributed', 'across_tokens'),
           ],
+          [
+            'Searches with results',
+            total(
+              d.events.filter((r) => r.kind === 'solution_search_matched'),
+              'unattributed',
+            ),
+          ],
+          [
+            'Empty searches',
+            total(
+              d.events.filter((r) => r.kind === 'solution_search_empty'),
+              'unattributed',
+            ),
+          ],
+          [
+            'Feedback inbox reads',
+            total(
+              d.events.filter((r) => r.kind === 'feedback_inbox_read'),
+              'unattributed',
+            ),
+          ],
           ['Independent agents', 'Unknown'],
         ].map(([label, value]) => (
           <div className="metric" key={label}>
@@ -41,6 +62,11 @@ export default async function Observatory() {
         solution pages.
       </p>
       <h2>Interpretation</h2>
+      <p>
+        Search outcomes cover successful API/MCP calls since version 1.0.2,
+        excluding browser page renders. They count requests, not visitors or
+        conversions. Query text is not stored.
+      </p>
       <ul>
         {d.limitations.map((x) => (
           <li key={x}>{x}</li>

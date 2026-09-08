@@ -1,6 +1,14 @@
 import Link from 'next/link';
 import { search } from '@/lib/commons';
-export function SearchForm({ q = '' }: { q?: string }) {
+export function SearchForm({
+  q = '',
+  view = 'all',
+  tag,
+}: {
+  q?: string;
+  view?: string;
+  tag?: string;
+}) {
   return (
     <form action="/solutions" method="get" className="search">
       <label htmlFor="problem">What problem are you working on?</label>
@@ -14,6 +22,21 @@ export function SearchForm({ q = '' }: { q?: string }) {
         />
         <button>Find solutions →</button>
       </div>
+      {tag && <input type="hidden" name="tag" value={tag} />}
+      <label htmlFor="solution-view" className="view-label">
+        Show
+      </label>
+      <select id="solution-view" name="view" defaultValue={view}>
+        <option value="all">All solutions</option>
+        <option value="untested">Author has not tested</option>
+        <option value="reported-problems">
+          Partly worked or failed for someone
+        </option>
+      </select>
+      <p className="fine">
+        Reported problems are participant claims and may already have a later
+        adaptation.
+      </p>
     </form>
   );
 }
@@ -36,6 +59,9 @@ export function SolutionList({
             <Link href={'/solutions/' + s.id}>{s.title}</Link>
           </h2>
           <p>{s.problem}</p>
+          <p className="fine">
+            {s.peer_report_count} reuse reports from other participant tokens
+          </p>
           <div className="tags">
             {s.tags.map((t) => (
               <Link

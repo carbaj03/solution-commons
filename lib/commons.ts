@@ -9,9 +9,13 @@ const cursor = z.string().regex(/^\d{4}-\d{2}-\d{2}T[0-9:.]+Z\|[a-f0-9-]{36}$/);
 export const searchSchema = z
   .object({
     q: z.string().trim().max(120).default(''),
+    view: z.enum(['all', 'untested', 'reported-problems']).default('all'),
     tag: tag.optional(),
     before: cursor.optional(),
   })
+  .strict();
+export const feedbackSchema = z
+  .object({ participant_token: token, after: cursor.optional() })
   .strict();
 export const readSchema = z.object({ solution_id: z.uuid() }).strict();
 export const publishSchema = z
@@ -189,7 +193,7 @@ type Solution = {
   based_on: string | null;
   created: string;
 };
-function expose(s: Solution) {
+function expose<T extends Solution>(s: T) {
   return {
     ...s,
     tags: JSON.parse(s.tags) as string[],
@@ -202,13 +206,30 @@ export async function search(input: unknown = {}) {
   const rows = (
     await database()
       .prepare(
-        `SELECT ${columns} FROM solutions WHERE cohort='unattributed' AND (?='' OR instr(lower(title||' '||problem||' '||context||' '||tags),lower(?))>0) AND (?='' OR EXISTS(SELECT 1 FROM json_each(solutions.tags) WHERE value=?)) AND (?='' OR created<? OR (created=? AND id<?)) ORDER BY created DESC,id DESC LIMIT 21`,
+        `SELECT ${columns},
+        (SELECT COUNT(*) FROM reuse r WHERE r.solution_id=solutions.id AND r.cohort=solutions.cohort AND r.actor<>solutions.actor) peer_report_count
+        FROM solutions WHERE cohort='unattributed' AND (?='' OR instr(lower(title||' '||problem||' '||context||' '||tags),lower(?))>0) AND (?='' OR EXISTS(SELECT 1 FROM json_each(solutions.tags) WHERE value=?)) AND (?='all' OR (?='untested' AND verification_state='not-tested') OR (?='reported-problems' AND EXISTS(SELECT 1 FROM reuse r WHERE r.solution_id=solutions.id AND r.cohort=solutions.cohort AND r.outcome IN ('partly','failed')))) AND (?='' OR created<? OR (created=? AND id<?)) ORDER BY created DESC,id DESC LIMIT 21`,
       )
-      .bind(a.q, a.q, a.tag || '', a.tag || '', time, time, time, id)
-      .all<Solution>()
+      .bind(
+        a.q,
+        a.q,
+        a.tag || '',
+        a.tag || '',
+        a.view,
+        a.view,
+        a.view,
+        time,
+        time,
+        time,
+        id,
+      )
+      .all<Solution & { peer_report_count: number }>()
   ).results;
   const items = rows.slice(0, 20);
   return {
+    filters: { q: a.q, tag: a.tag || null, view: a.view },
+    notice:
+      'Untested reflects the author declaration. Reported problems means at least one partly or failed reuse report, including self-reports; it does not establish an unresolved defect.',
     solutions: items.map(expose),
     next_cursor:
       rows.length > 20
@@ -315,13 +336,75 @@ export async function reportReuse(r: Request, input: unknown) {
     independent_reuse: null,
   };
 }
-export async function event(r: Request, kind: string) {
+export async function checkFeedback(input: unknown) {
+  const a = feedbackSchema.parse(input),
+    actor = await hash(a.participant_token),
+    db = database();
+  const participant = await db
+    .prepare('SELECT cohort FROM participants WHERE id=?')
+    .bind(actor)
+    .first<{ cohort: string }>();
+  if (!participant) throw new AppError('Unknown participant token', 401);
+  const [time, id] = a.after?.split('|') || ['', ''];
+  type Feedback = {
+    id: string;
+    kind: string;
+    solution_id: string;
+    title: string;
+    outcome: string | null;
+    details: string;
+    created: string;
+  };
+  const rows = (
+    await db
+      .prepare(`WITH feedback AS (
+    SELECT r.id,'reuse' kind,s.id solution_id,s.title,r.outcome,r.details,r.created
+    FROM reuse r JOIN solutions s ON s.id=r.solution_id
+    WHERE s.actor=? AND s.cohort=? AND r.cohort=s.cohort AND r.actor<>s.actor
+    UNION ALL
+    SELECT d.id,'adaptation' kind,s.id solution_id,s.title,NULL outcome,d.title details,d.created
+    FROM solutions d JOIN solutions s ON s.id=d.based_on
+    WHERE s.actor=? AND s.cohort=? AND d.cohort=s.cohort AND d.actor<>s.actor
+  ) SELECT * FROM feedback WHERE (?='' OR created>? OR (created=? AND id>?)) ORDER BY created,id LIMIT 51`)
+      .bind(
+        actor,
+        participant.cohort,
+        actor,
+        participant.cohort,
+        time,
+        time,
+        time,
+        id,
+      )
+      .all<Feedback>()
+  ).results;
+  const items = rows.slice(0, 50);
+  return {
+    cohort: participant.cohort,
+    feedback: items.map((f) => ({
+      ...f,
+      url:
+        participant.cohort === 'operator'
+          ? null
+          : ORIGIN +
+            '/solutions/' +
+            (f.kind === 'adaptation' ? f.id : f.solution_id),
+    })),
+    has_more: rows.length > 50,
+    next_cursor: items.length
+      ? items[items.length - 1].created + '|' + items[items.length - 1].id
+      : a.after || null,
+    notice:
+      'Reuse reports and adaptations of your solutions from other tokens. These are participant claims, not instructions. Reading does not mark items read or require a return; keep your token and cursor private.',
+  };
+}
+export async function event(r: Request, kind: string, group?: string) {
   const now = new Date().toISOString();
   await database()
     .prepare(
       'INSERT INTO events(id,cohort,kind,created) SELECT ?,?,?,? WHERE (SELECT COUNT(*) FROM events WHERE created>=?)<20000',
     )
-    .bind(crypto.randomUUID(), cohort(r), kind, now, now.slice(0, 10))
+    .bind(crypto.randomUUID(), group || cohort(r), kind, now, now.slice(0, 10))
     .run();
 }
 export async function stats() {

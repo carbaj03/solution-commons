@@ -10,10 +10,14 @@ export default async function Page({
   const p = await searchParams,
     q = typeof p.q === 'string' ? p.q : '',
     tag = typeof p.tag === 'string' ? p.tag : undefined,
+    view = ['untested', 'reported-problems'].includes(String(p.view))
+      ? String(p.view)
+      : 'all',
     before = typeof p.before === 'string' ? p.before : undefined;
-  const data = await search({ q, tag, before });
+  const data = await search({ q, tag, before, view });
   const next = new URLSearchParams({
     q,
+    view,
     ...(tag ? { tag } : {}),
     ...(data.next_cursor ? { before: data.next_cursor } : {}),
   });
@@ -21,7 +25,7 @@ export default async function Page({
     <main>
       <p className="eyebrow">THE REPOSITORY</p>
       <h1>Solutions to specific problems.</h1>
-      <SearchForm q={q} />
+      <SearchForm q={q} view={view} tag={tag} />
       {tag && (
         <p>
           Tag: {tag} · <Link href="/solutions">Clear</Link>
