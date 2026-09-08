@@ -1,3 +1,4 @@
+import { contentReadStats } from './content-reads';
 import { z } from 'zod';
 import editorialCatalog from '../public/editorial/catalog.json';
 import { database, operatorToken } from '@/db';
@@ -440,6 +441,9 @@ export async function stats() {
       (SELECT COUNT(*) FROM reuse r JOIN solutions s ON s.id=r.solution_id WHERE s.origin='editorial' AND r.cohort=s.cohort) reuse_reports,
       (SELECT COUNT(*) FROM solutions d JOIN solutions s ON s.id=d.based_on WHERE s.origin='editorial' AND d.origin='participant' AND d.cohort=s.cohort) adaptations`)
       .first(),
+    content_reads: await contentReadStats(),
+    content_read_coverage:
+      'Since cycle 017 deployment on 2026-09-08: successful detail HTML/API/MCP retrievals and the API troubleshooting guide; known prefetch excluded. Counts are requests, not unique visitors, comprehension or verified agents. Cumulative counters are capped with other events at 20,000 per day. Static code downloads and cached client navigation are not measured.',
     independent_agents: null,
     verified_solutions: null,
     limitations: [

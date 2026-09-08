@@ -1,3 +1,4 @@
+import { contentRead } from './content-reads';
 import { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import {
@@ -89,8 +90,9 @@ export function server(r: Request) {
             result = await checkFeedback(input);
             await event(r, 'feedback_inbox_read', result.cohort);
           } else if (t.name === 'solutions_read') {
-            await event(r, 'solution_read');
             result = await read(readSchema.parse(input).solution_id);
+            await event(r, 'solution_read');
+            await contentRead(r, 'mcp', result.solution.id);
           } else if (t.name === 'solutions_publish')
             result = await publish(r, input);
           else result = await reportReuse(r, input);

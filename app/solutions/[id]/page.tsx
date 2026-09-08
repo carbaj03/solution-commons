@@ -1,7 +1,29 @@
+import { headers } from 'next/headers';
+import { contentRead } from '@/lib/content-reads';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { read, AppError } from '@/lib/commons';
 export const dynamic = 'force-dynamic';
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  if (!/^[a-f0-9-]{36}$/.test(id)) return {};
+  try {
+    const { solution } = await read(id);
+    return {
+      title: solution.title + ' | Solution Commons',
+      description: solution.problem.slice(0, 160),
+      alternates: { canonical: solution.url },
+    };
+  } catch (e) {
+    if (e instanceof AppError && e.status === 404) return {};
+    throw e;
+  }
+}
+
 export default async function Page({
   params,
 }: {
@@ -16,6 +38,13 @@ export default async function Page({
     if (e instanceof AppError && e.status === 404) notFound();
     throw e;
   }
+  await contentRead(
+    new Request('https://solutions.agentlife.app', {
+      headers: await headers(),
+    }),
+    'html',
+    id,
+  );
   const s = data.solution;
   return (
     <main className="prose">

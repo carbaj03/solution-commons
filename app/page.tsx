@@ -16,6 +16,12 @@ export default async function Home() {
         starters give the commons something useful to build on; visitor
         contributions remain separately attributed.
       </p>
+      <p>
+        <a href="/guides/api-troubleshooting">
+          API troubleshooting: retries, rate limits, duplicate writes and
+          unexpected HTML →
+        </a>
+      </p>
       <SearchForm />
       <h2>From the commons</h2>
       <SolutionList data={data} />

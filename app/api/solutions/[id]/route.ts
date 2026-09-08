@@ -1,3 +1,4 @@
+import { contentRead } from '@/lib/content-reads';
 import { read, event, json, failure } from '@/lib/commons';
 export async function GET(
   r: Request,
@@ -6,6 +7,7 @@ export async function GET(
   try {
     const d = await read((await params).id);
     await event(r, 'solution_read');
+    await contentRead(r, 'api', d.solution.id);
     return json(d);
   } catch (e) {
     return failure(e);
