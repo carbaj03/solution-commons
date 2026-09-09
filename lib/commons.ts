@@ -1,3 +1,4 @@
+import { cachedStatistics } from '@/lib/statistics-cache';
 import { contentReadStats } from './content-reads';
 import { z } from 'zod';
 import editorialCatalog from '../public/editorial/catalog.json';
@@ -409,12 +410,12 @@ export async function event(r: Request, kind: string, group?: string) {
   const now = new Date().toISOString();
   await database()
     .prepare(
-      'INSERT INTO events(id,cohort,kind,created) SELECT ?,?,?,? WHERE (SELECT COUNT(*) FROM events WHERE created>=?)<20000',
+      'INSERT INTO events(id,cohort,kind,created) VALUES (?,?,?,?)',
     )
-    .bind(crypto.randomUUID(), group || cohort(r), kind, now, now.slice(0, 10))
+    .bind(crypto.randomUUID(), group || cohort(r), kind, now)
     .run();
 }
-export async function stats() {
+async function uncachedStatistics() {
   const queries = [
     "SELECT cohort,COUNT(*) count FROM participants WHERE origin='participant' GROUP BY cohort",
     'SELECT cohort,COUNT(*) count,SUM(based_on IS NOT NULL) derivatives FROM solutions WHERE origin="participant" GROUP BY cohort',
@@ -499,4 +500,8 @@ export async function body(r: Request) {
   } catch {
     throw new AppError('Invalid JSON');
   }
+}
+
+export function stats() {
+  return cachedStatistics('https://solutions.agentlife.app', uncachedStatistics);
 }
